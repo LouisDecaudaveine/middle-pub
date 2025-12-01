@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePubData } from './hooks/usePubData';
+import Link from "next/link";
+import { usePubData } from "@/hooks/usePubData";
 
 export default function Home() {
   const {
@@ -37,7 +37,9 @@ export default function Home() {
   return (
     <div className="min-h-screen p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">London Pubs - usePubData Hook Test</h1>
+        <h1 className="text-3xl font-bold">
+          London Pubs - usePubData Hook Test
+        </h1>
         <div className="flex gap-3">
           <Link
             href="/map-test"
@@ -53,11 +55,15 @@ export default function Home() {
           </Link>
         </div>
       </div>
-      
+
       {/* Stats */}
       <div className="mb-6 p-4 bg-gray-100 rounded">
-        <p className="text-lg"><strong>Total Pubs:</strong> {totalCount}</p>
-        <p className="text-lg"><strong>Filtered Pubs:</strong> {filteredCount}</p>
+        <p className="text-lg">
+          <strong>Total Pubs:</strong> {totalCount}
+        </p>
+        <p className="text-lg">
+          <strong>Filtered Pubs:</strong> {filteredCount}
+        </p>
       </div>
 
       {/* Search */}
@@ -77,8 +83,10 @@ export default function Home() {
         <div>
           <label className="block mb-2 font-medium">Borough</label>
           <select
-            value={filters.borough || ''}
-            onChange={(e) => setFilters({ ...filters, borough: e.target.value || undefined })}
+            value={filters.borough || ""}
+            onChange={(e) =>
+              setFilters({ ...filters, borough: e.target.value || undefined })
+            }
             className="px-4 py-2 border rounded"
           >
             <option value="">All Boroughs</option>
@@ -93,8 +101,13 @@ export default function Home() {
         <div>
           <label className="block mb-2 font-medium">Open Status</label>
           <select
-            value={filters.openStatus ?? ''}
-            onChange={(e) => setFilters({ ...filters, openStatus: e.target.value ? Number(e.target.value) : undefined })}
+            value={filters.openStatus ?? ""}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                openStatus: e.target.value ? Number(e.target.value) : undefined,
+              })
+            }
             className="px-4 py-2 border rounded"
           >
             <option value="">All</option>
@@ -112,7 +125,10 @@ export default function Home() {
       </div>
 
       {/* Results Table */}
-      <div className="border rounded overflow-auto" style={{ maxHeight: '500px' }}>
+      <div
+        className="border rounded overflow-auto"
+        style={{ maxHeight: "500px" }}
+      >
         <table className="w-full">
           <thead className="bg-gray-50 sticky top-0">
             <tr>
@@ -131,7 +147,7 @@ export default function Home() {
                 <td className="px-4 py-2">{pub.properties.borough_name}</td>
                 <td className="px-4 py-2">{pub.properties.postcode}</td>
                 <td className="px-4 py-2">
-                  {pub.properties.open_status === 1 ? '✅ Open' : '❌ Closed'}
+                  {pub.properties.open_status === 1 ? "✅ Open" : "❌ Closed"}
                 </td>
               </tr>
             ))}

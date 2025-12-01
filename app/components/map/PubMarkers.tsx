@@ -3,13 +3,13 @@
  * Renders pub markers on the map using Mapbox clustering
  */
 
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import { useMap } from './MapContainer';
-import type { PubFeatureCollection, PubFeature } from '@/app/types/pub';
-import { CLUSTER_CONFIG, MARKER_CONFIG } from '@/app/lib/constants';
+import { useEffect, useRef } from "react";
+import mapboxgl from "mapbox-gl";
+import { useMap } from "./MapContainer";
+import type { PubFeatureCollection, PubFeature } from "@/types/pub";
+import { CLUSTER_CONFIG, MARKER_CONFIG } from "@/lib/constants";
 
 export interface PubMarkersProps {
   /** Pub data in GeoJSON format */
@@ -26,7 +26,7 @@ export default function PubMarkers({
   data,
   enableClustering = false,
   onPubClick,
-  sourceId = 'pubs',
+  sourceId = "pubs",
 }: PubMarkersProps) {
   const { map, isLoaded } = useMap();
   const layersAddedRef = useRef(false);
@@ -42,7 +42,8 @@ export default function PubMarkers({
     // Remove existing layers and source if they exist
     const cleanup = () => {
       if (map.getLayer(unclusteredLayerId)) map.removeLayer(unclusteredLayerId);
-      if (map.getLayer(clusterCountLayerId)) map.removeLayer(clusterCountLayerId);
+      if (map.getLayer(clusterCountLayerId))
+        map.removeLayer(clusterCountLayerId);
       if (map.getLayer(clusteredLayerId)) map.removeLayer(clusteredLayerId);
       if (map.getSource(sourceId)) map.removeSource(sourceId);
       layersAddedRef.current = false;
@@ -52,7 +53,7 @@ export default function PubMarkers({
 
     // Add source
     map.addSource(sourceId, {
-      type: 'geojson',
+      type: "geojson",
       data,
       cluster: enableClustering,
       clusterMaxZoom: CLUSTER_CONFIG.MAX_ZOOM,
@@ -63,46 +64,46 @@ export default function PubMarkers({
       // Add cluster circle layer
       map.addLayer({
         id: clusteredLayerId,
-        type: 'circle',
+        type: "circle",
         source: sourceId,
-        filter: ['has', 'point_count'],
+        filter: ["has", "point_count"],
         paint: {
-          'circle-color': [
-            'step',
-            ['get', 'point_count'],
+          "circle-color": [
+            "step",
+            ["get", "point_count"],
             MARKER_CONFIG.CLUSTER_COLORS.SMALL, // < 10 pubs
             10,
             MARKER_CONFIG.CLUSTER_COLORS.MEDIUM, // 10-50 pubs
             50,
             MARKER_CONFIG.CLUSTER_COLORS.LARGE, // > 50 pubs
           ],
-          'circle-radius': [
-            'step',
-            ['get', 'point_count'],
+          "circle-radius": [
+            "step",
+            ["get", "point_count"],
             15, // Small clusters
             10,
             20, // Medium clusters
             50,
             25, // Large clusters
           ],
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#fff',
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#fff",
         },
       });
 
       // Add cluster count label layer
       map.addLayer({
         id: clusterCountLayerId,
-        type: 'symbol',
+        type: "symbol",
         source: sourceId,
-        filter: ['has', 'point_count'],
+        filter: ["has", "point_count"],
         layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 12,
+          "text-field": "{point_count_abbreviated}",
+          "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+          "text-size": 12,
         },
         paint: {
-          'text-color': '#ffffff',
+          "text-color": "#ffffff",
         },
       });
 
@@ -117,7 +118,8 @@ export default function PubMarkers({
         const source = map.getSource(sourceId) as mapboxgl.GeoJSONSource;
         source.getClusterExpansionZoom(clusterId, (err, zoom) => {
           if (err) return;
-          const coordinates = (features[0].geometry as GeoJSON.Point).coordinates;
+          const coordinates = (features[0].geometry as GeoJSON.Point)
+            .coordinates;
           map.easeTo({
             center: coordinates as [number, number],
             zoom: zoom || map.getZoom() + 2,
@@ -125,38 +127,46 @@ export default function PubMarkers({
         });
       };
 
-      map.on('click', clusteredLayerId, handleClusterClick);
+      map.on("click", clusteredLayerId, handleClusterClick);
 
       // Change cursor on cluster hover
-      map.on('mouseenter', clusteredLayerId, () => {
-        map.getCanvas().style.cursor = 'pointer';
+      map.on("mouseenter", clusteredLayerId, () => {
+        map.getCanvas().style.cursor = "pointer";
       });
-      map.on('mouseleave', clusteredLayerId, () => {
-        map.getCanvas().style.cursor = '';
+      map.on("mouseleave", clusteredLayerId, () => {
+        map.getCanvas().style.cursor = "";
       });
     }
 
     // Add unclustered point layer
     map.addLayer({
       id: unclusteredLayerId,
-      type: 'circle',
+      type: "circle",
       source: sourceId,
-      ...(enableClustering && { filter: ['!', ['has', 'point_count']] }),
+      ...(enableClustering && { filter: ["!", ["has", "point_count"]] }),
       paint: {
-        'circle-color': '#8B4513', // Saddle brown / beer color
-        'circle-radius': 8,
-        'circle-stroke-width': 2,
-        'circle-stroke-color': '#fff',
+        "circle-color": "#8B4513", // Saddle brown / beer color
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10,
+          4, // At zoom 10 and below, radius is 4
+          16,
+          8, // At zoom 16 and above, radius is 8
+        ],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#fff",
       },
     });
 
     // Add hover effect for unclustered points
-    map.on('mouseenter', unclusteredLayerId, () => {
-      map.getCanvas().style.cursor = 'pointer';
+    map.on("mouseenter", unclusteredLayerId, () => {
+      map.getCanvas().style.cursor = "pointer";
     });
 
-    map.on('mouseleave', unclusteredLayerId, () => {
-      map.getCanvas().style.cursor = '';
+    map.on("mouseleave", unclusteredLayerId, () => {
+      map.getCanvas().style.cursor = "";
     });
 
     // Handle pub marker clicks
@@ -170,18 +180,32 @@ export default function PubMarkers({
       }
 
       // Create and show popup
-      const coordinates = (feature.geometry as GeoJSON.Point).coordinates.slice() as [number, number];
+      const coordinates = (
+        feature.geometry as GeoJSON.Point
+      ).coordinates.slice() as [number, number];
       const properties = feature.properties;
-      
+
       const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${coordinates[1]},${coordinates[0]}`;
-      
+
       const popupContent = `
         <div class="pub-popup" style="color: black;">
-          <h3 style="font-weight: bold; font-size: 16px; margin-bottom: 8px; color: black;">${properties?.name || 'Unknown'}</h3>
-          <p style="margin-bottom: 4px; color: black;">${properties?.address1 || ''}</p>
-          ${properties?.postcode ? `<p style="margin-bottom: 8px; color: black;">${properties.postcode}</p>` : ''}
+          <h3 style="font-weight: bold; font-size: 16px; margin-bottom: 8px; color: black;">${
+            properties?.name || "Unknown"
+          }</h3>
+          <p style="margin-bottom: 4px; color: black;">${
+            properties?.address1 || ""
+          }</p>
+          ${
+            properties?.postcode
+              ? `<p style="margin-bottom: 8px; color: black;">${properties.postcode}</p>`
+              : ""
+          }
           <a href="${googleMapsUrl}" target="_blank" rel="noopener" style="color: #1a73e8; text-decoration: underline; display: block; margin-top: 8px;">View on Google Maps</a>
-          ${properties?.website ? `<a href="${properties.website}" target="_blank" rel="noopener" style="color: #1a73e8; text-decoration: underline; display: block; margin-top: 4px;">🌐 Visit Website</a>` : ''}
+          ${
+            properties?.website
+              ? `<a href="${properties.website}" target="_blank" rel="noopener" style="color: #1a73e8; text-decoration: underline; display: block; margin-top: 4px;">🌐 Visit Website</a>`
+              : ""
+          }
         </div>
       `;
 
@@ -195,7 +219,7 @@ export default function PubMarkers({
         .addTo(map);
     };
 
-    map.on('click', unclusteredLayerId, handlePubClick);
+    map.on("click", unclusteredLayerId, handlePubClick);
 
     layersAddedRef.current = true;
 

@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@mapbox/mapbox-sdk": "^0.16.2",
+    "@mapbox/search-js-react": "^1.5.0",
     "@tanstack/react-query": "^5.90.6",
     "@types/mapbox-gl": "^3.4.1",
+    "lucide-react": "^0.552.0",
     "mapbox-gl": "^3.16.0",
     "next": "16.0.1",
     "react": "19.2.0",
