@@ -42,6 +42,7 @@ export async function POST(
     }
 
     // Build the request body for Google Routes API
+    const travelMode = params.travelMode ?? "WALK";
     const requestBody: GoogleComputeRoutesRequest = {
       origin: {
         location: {
@@ -59,12 +60,20 @@ export async function POST(
           },
         },
       },
-      travelMode: params.travelMode ?? "WALK",
-      routingPreference: params.routingPreference,
+      travelMode,
       computeAlternativeRoutes: params.computeAlternativeRoutes ?? false,
       units: params.units ?? "METRIC",
       languageCode: "en-GB",
     };
+
+    // routingPreference is only valid for DRIVE and TWO_WHEELER modes
+    // It must NOT be set for TRANSIT, WALK, or BICYCLE
+    if (
+      params.routingPreference &&
+      (travelMode === "DRIVE" || travelMode === "TWO_WHEELER")
+    ) {
+      requestBody.routingPreference = params.routingPreference;
+    }
 
     // Add route modifiers if specified
     if (params.avoidTolls || params.avoidHighways || params.avoidFerries) {
@@ -94,6 +103,7 @@ export async function POST(
       "routes.viewport",
     ].join(",");
 
+    console.log("api side, request: ", requestBody);
     const response = await fetch(GOOGLE_ROUTES_API_URL, {
       method: "POST",
       headers: {
@@ -117,6 +127,7 @@ export async function POST(
     }
 
     const data: GoogleComputeRoutesResponse = await response.json();
+    console.log("response data", data);
 
     return NextResponse.json({ success: true, data });
   } catch (error) {

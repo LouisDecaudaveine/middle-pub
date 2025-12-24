@@ -1,7 +1,6 @@
 "use client";
 
-import { Loader2, MapPin, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMap } from "@/providers/MapProvider";
@@ -9,16 +8,18 @@ import { Input } from "@/components/ui/atoms";
 import { LocationFeature, LocationSuggestion } from "@/lib/utils/mapbox";
 
 import { cn } from "@/lib/utils";
-import ComboSearch from "../molecules/ComboSearch";
+import ComboSearch from "@/components/ui/molecules/ComboSearch";
 
 export default function MapSearch({
   className,
   placeholder,
-  onValueChange,
+  onSelect,
+  onDeselect,
 }: {
   className?: string;
   placeholder?: string;
-  onValueChange?: (newValue: unknown) => void;
+  onSelect: (newValue: LocationFeature) => void;
+  onDeselect: () => void;
 }) {
   const { map } = useMap();
   const [query, setQuery] = useState("");
@@ -73,6 +74,12 @@ export default function MapSearch({
     searchLocations();
   }, [debouncedQuery]);
 
+  useEffect(() => {
+    if (selectedLocation) {
+      onSelect(selectedLocation);
+    }
+  }, [selectedLocation, onSelect]);
+
   // Handle input change
   const handleInputChange = (value: string) => {
     console.log("Input changed:", value);
@@ -118,13 +125,14 @@ export default function MapSearch({
   };
 
   // Clear search
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setQuery("");
     setDisplayValue("");
     setResults([]);
     setSelectedLocation(null);
     setSelectedLocations([]);
-  };
+    onDeselect();
+  }, [onDeselect]);
 
   return (
     <ComboSearch

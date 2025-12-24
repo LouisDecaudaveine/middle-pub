@@ -1,11 +1,12 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 import { twMerge } from "tailwind-merge";
 
 import { useDeviceFormat } from "@/hooks/useDeviceFormat";
 import { UI_CONFIG } from "@/lib/constants";
+import { IRouteRequestParams } from "@/types/routes";
 
 import { Bike, BusFront, Footprints } from "lucide-react";
 import MapSearchInput from "@/components/ui/organisms/MapSearchInput";
@@ -32,12 +33,26 @@ const TransportButton = ({
   );
 };
 
-const SearchTab = ({ className }: { className?: string }) => {
+const SearchTab = ({
+  className,
+  onSearchChange,
+}: {
+  className?: string;
+  onSearchChange: (req: IRouteRequestParams) => void;
+}) => {
   const { isMobile } = useDeviceFormat();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTransport, setSelectedTransport] = useState<
     "transit" | "walking" | "cycling"
   >("walking");
+  const [pointA, setPointA] = useState<[number, number]>();
+  const [pointB, setPointB] = useState<[number, number]>();
+
+  useEffect(() => {
+    if (!pointA || !pointB) return;
+
+    onSearchChange({ pointA, pointB, mode: selectedTransport });
+  }, [pointA, pointB, selectedTransport, onSearchChange]);
 
   if (isMobile) {
     return (
@@ -135,8 +150,18 @@ const SearchTab = ({ className }: { className?: string }) => {
       </div>
 
       <div className="flex flex-col gap-2 w-full">
-        <MapSearchInput className="w-full" placeholder="Search point A" />
-        <MapSearchInput className="w-full" placeholder="Search point B" />
+        <MapSearchInput
+          className="w-full"
+          placeholder="Search point A"
+          onSelect={(location) => setPointA(location.geometry.coordinates)}
+          onDeselect={() => setPointA(undefined)}
+        />
+        <MapSearchInput
+          className="w-full"
+          placeholder="Search point B"
+          onSelect={(location) => setPointB(location.geometry.coordinates)}
+          onDeselect={() => setPointB(undefined)}
+        />
       </div>
 
       {/* Desktop search UI elements go here */}

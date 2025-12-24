@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import MapContainer from "@/components/map/MapContainer";
 import MapProvider from "@/providers/MapProvider";
@@ -10,11 +10,11 @@ import SearchTab from "@/components/ui/layouts/SearchTab";
 import { SkeletonLoader } from "@/components/ui";
 import { usePubData } from "@/hooks/usePubData";
 import { useRoutes } from "@/hooks/useRoutes";
+import type { GoogleRouteLegStep, IRouteRequestParams } from "@/types/routes";
 
 const Page = () => {
   const { pubs, isLoading, isError, error, filteredCount, totalCount } =
     usePubData();
-
   const {
     data: routeData,
     isLoading: isRouteLoading,
@@ -23,13 +23,29 @@ const Page = () => {
     getRoute,
   } = useRoutes({ travelMode: "TRANSIT" });
 
+  const [routeRequestParams, setRouteRequestParams] = useState<{
+    pointA?: [number, number];
+    pointB?: [number, number];
+    mode: "transit" | "walking" | "cycling";
+  }>();
+
+  // Derive route steps directly from routeData instead of storing in state
+  const routeSteps = routeData?.routes?.[0]?.legs?.[0]?.steps ?? [];
+
+  console.log("Route Steps:", routeSteps);
+
+  const handleRouteRequestChange = useCallback((req: IRouteRequestParams) => {
+    setRouteRequestParams(req);
+  }, []);
+
   // Fetch route on mount
   useEffect(() => {
-    getRoute(51.566319, -0.273811, 51.558518, -0.176127);
-  }, [getRoute]);
-
-  // Get route steps for the RoutePolyline component
-  const routeSteps = routeData?.routes?.[0]?.legs?.[0]?.steps;
+    if (routeRequestParams?.pointA && routeRequestParams?.pointB && getRoute) {
+      const [startLng, startLat] = routeRequestParams.pointA;
+      const [endLng, endLat] = routeRequestParams.pointB;
+      getRoute(startLat, startLng, endLat, endLng);
+    }
+  }, [getRoute, routeRequestParams]);
 
   const pubCollection = {
     type: "FeatureCollection" as const,
@@ -60,7 +76,7 @@ const Page = () => {
             </MapContainer>
           </div>
           <div>
-            <SearchTab />
+            <SearchTab onSearchChange={handleRouteRequestChange} />
           </div>
         </div>
       </MapProvider>

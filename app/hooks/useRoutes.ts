@@ -85,7 +85,7 @@ async function fetchRoute(
     },
     body: JSON.stringify(params),
   });
-
+  console.log("Fetch route response status:", response.status);
   const result: GoogleRouteAPIResponse = await response.json();
 
   if (!result.success || !result.data) {

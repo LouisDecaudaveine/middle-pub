@@ -215,3 +215,9 @@ export interface GoogleRouteAPIResponse {
   data?: GoogleComputeRoutesResponse;
   error?: string;
 }
+
+export interface IRouteRequestParams {
+  pointA: [number, number];
+  pointB: [number, number];
+  mode: "transit" | "walking" | "cycling";
+}
