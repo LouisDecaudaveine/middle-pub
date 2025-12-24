@@ -8,7 +8,7 @@ import { useDeviceFormat } from "@/hooks/useDeviceFormat";
 import { UI_CONFIG } from "@/lib/constants";
 
 import { Bike, BusFront, Footprints } from "lucide-react";
-import MapSearchInput from "@/components/ui/MapSearchInput";
+import MapSearchInput from "@/components/ui/organisms/MapSearchInput";
 
 const TransportButton = ({
   onClick,
@@ -134,16 +134,10 @@ const SearchTab = ({ className }: { className?: string }) => {
         />
       </div>
 
-      <MapSearchInput />
-
-      <input
-        placeholder="Start Point A"
-        className="border border-gray-300 rounded-md p-2 w-full"
-      />
-      <input
-        placeholder="Start Point B"
-        className="border border-gray-300 rounded-md p-2 w-full"
-      />
+      <div className="flex flex-col gap-2 w-full">
+        <MapSearchInput className="w-full" placeholder="Search point A" />
+        <MapSearchInput className="w-full" placeholder="Search point B" />
+      </div>
 
       {/* Desktop search UI elements go here */}
     </div>

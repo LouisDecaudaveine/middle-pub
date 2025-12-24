@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useMemo } from "react";
 import mapboxgl from "mapbox-gl";
-import { useMap } from "./MapContainer";
+import { useMap } from "../../providers/MapProvider";
 import { decodePolyline } from "@/lib/utils/coordinates";
 import type { GoogleRouteLegStep } from "@/types/routes";
 

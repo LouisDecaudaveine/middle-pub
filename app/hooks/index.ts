@@ -6,3 +6,4 @@
 // export { default as useMapbox } from "./useMapbox";
 export * from "./usePubData";
 export * from "./useRoutes";
+export * from "./useDebounce";

@@ -7,7 +7,7 @@
 
 import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
-import { useMap } from "./MapContainer";
+import { useMap } from "../../providers/MapProvider";
 import type { PubFeatureCollection, PubFeature } from "@/types/pub";
 import { CLUSTER_CONFIG, MARKER_CONFIG } from "@/lib/constants";
 

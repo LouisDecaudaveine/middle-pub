@@ -3,12 +3,12 @@
  * Main Mapbox map container for displaying London pubs
  * Using Mapbox GL JS v3.x directly for maximum control and performance
  *
- * Uses compound component pattern with context to pass map instance to children
+ * Consumes MapProvider context to share map instance with sibling components
  */
 
 "use client";
 
-import { useEffect, useRef, useState, createContext, useContext } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import mapboxgl from "mapbox-gl";
@@ -17,30 +17,10 @@ import { twMerge } from "tailwind-merge";
 
 import { MAPBOX_CONFIG, LONDON_MAP_CONFIG } from "@/lib/constants";
 import { MapSkeleton } from "@/components/ui/skeleton";
+import { useMap } from "../../providers/MapProvider";
 
 // Import Mapbox CSS
 import "mapbox-gl/dist/mapbox-gl.css";
-
-/**
- * Map Context for sharing map instance with child components
- */
-interface MapContextType {
-  map: MapboxMap | null;
-  isLoaded: boolean;
-}
-
-const MapContext = createContext<MapContextType | null>(null);
-
-/**
- * Hook to access map instance from child components
- */
-export function useMap() {
-  const context = useContext(MapContext);
-  if (!context) {
-    throw new Error("useMap must be used within a MapContainer");
-  }
-  return context;
-}
 
 /**
  * MapContainer Props
@@ -83,8 +63,10 @@ export default function MapContainer({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Get context from MapProvider (if available)
+  const mapContext = useMap();
 
   // Store callbacks in refs to avoid re-initializing map
   const onLoadRef = useRef(onLoad);
@@ -163,8 +145,11 @@ export default function MapContainer({
       map.on("load", () => {
         console.log("Map loaded successfully");
         setIsLoading(false);
-        setIsMapLoaded(true);
         setError(null);
+
+        // Register map with provider context
+        mapContext.setMap(map);
+        mapContext.setIsLoaded(true);
 
         // Call onLoad callback if provided
         if (onLoadRef.current) {
@@ -199,6 +184,9 @@ export default function MapContainer({
         map.off("click", handleClick);
         map.remove();
         mapRef.current = null;
+        // Clear provider context
+        mapContext.setMap(null);
+        mapContext.setIsLoaded(false);
       };
     } catch (err) {
       console.error("Failed to initialize map:", err);
@@ -225,36 +213,34 @@ export default function MapContainer({
   }, [initialZoom]);
 
   return (
-    <MapContext.Provider value={{ map: mapRef.current, isLoaded: isMapLoaded }}>
-      <div
-        className={twMerge(
-          `relative w-full h-full min-h-[400px] min-w-[300px] flex flex-col`,
-          className
-        )}
-      >
-        {/* Loading State */}
-        {isLoading && <MapSkeleton className="absolute inset-0 z-10" />}
+    <div
+      className={twMerge(
+        `relative w-full h-full min-h-[400px] min-w-[300px] flex flex-col`,
+        className
+      )}
+    >
+      {/* Loading State */}
+      {isLoading && <MapSkeleton className="absolute inset-0 z-10" />}
 
-        {/* Error State */}
-        {error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-red-50 z-10">
-            <div className="text-center p-4">
-              <div className="text-red-600 text-xl mb-2">⚠️</div>
-              <p className="text-red-800 font-semibold mb-1">Map Error</p>
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
+      {/* Error State */}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-red-50 z-10">
+          <div className="text-center p-4">
+            <div className="text-red-600 text-xl mb-2">⚠️</div>
+            <p className="text-red-800 font-semibold mb-1">Map Error</p>
+            <p className="text-red-600 text-sm">{error}</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Map Container */}
-        <div ref={mapContainerRef} className="flex-1 w-full" />
+      {/* Map Container */}
+      <div ref={mapContainerRef} className="flex-1 w-full" />
 
-        {/* Child components that need access to map */}
-        {children}
-      </div>
-    </MapContext.Provider>
+      {/* Child components that need access to map */}
+      {children}
+    </div>
   );
 }
 
-// Export the getMap function type for parent components
+// Re-export types for convenience
 export type { MapboxMap };

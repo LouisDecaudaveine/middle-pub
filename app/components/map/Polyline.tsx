@@ -7,7 +7,7 @@
 
 import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
-import { useMap } from "./MapContainer";
+import { useMap } from "../../providers/MapProvider";
 
 export interface PolylineProps {
   /** Route coordinates as an array of [lng, lat] tuples */
