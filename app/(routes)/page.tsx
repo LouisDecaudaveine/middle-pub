@@ -8,13 +8,20 @@ import PubMarkers from "@/components/map/PubMarkers";
 import RoutePolyline from "@/components/map/RoutePolyline";
 import SearchTab from "@/components/ui/layouts/SearchTab";
 import { SkeletonLoader } from "@/components/ui";
+
 import { usePubData } from "@/hooks/usePubData";
+
 import { useRoutes } from "@/hooks/useRoutes";
 import type { GoogleRouteLegStep, IRouteRequestParams } from "@/types/routes";
+import {
+  getRouteMidpointByDuration,
+  filterPositionsWithinThreshold,
+} from "@/lib/utils/coordinates";
 
 const Page = () => {
   const { pubs, isLoading, isError, error, filteredCount, totalCount } =
     usePubData();
+
   const {
     data: routeData,
     isLoading: isRouteLoading,
@@ -31,8 +38,18 @@ const Page = () => {
 
   // Derive route steps directly from routeData instead of storing in state
   const routeSteps = routeData?.routes?.[0]?.legs?.[0]?.steps ?? [];
+  const midPoint = getRouteMidpointByDuration(routeSteps);
+  const filteredPubsThresholdBool = midPoint
+    ? filterPositionsWithinThreshold(
+        midPoint,
+        pubs.map((pub) => pub.geometry.coordinates),
+        400
+      )
+    : new Array(pubs.length).fill(true);
 
-  console.log("Route Steps:", routeSteps);
+  const filteredPubs = pubs.filter(
+    (_, index) => filteredPubsThresholdBool[index]
+  );
 
   const handleRouteRequestChange = useCallback((req: IRouteRequestParams) => {
     setRouteRequestParams(req);
@@ -49,7 +66,7 @@ const Page = () => {
 
   const pubCollection = {
     type: "FeatureCollection" as const,
-    features: pubs,
+    features: filteredPubs,
   };
 
   if (isLoading) {
@@ -76,7 +93,10 @@ const Page = () => {
             </MapContainer>
           </div>
           <div>
-            <SearchTab onSearchChange={handleRouteRequestChange} />
+            <SearchTab
+              onSearchChange={handleRouteRequestChange}
+              reccomendedPubs={midPoint && filteredPubs}
+            />
           </div>
         </div>
       </MapProvider>

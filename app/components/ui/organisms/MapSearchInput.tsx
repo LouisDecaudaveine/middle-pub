@@ -15,9 +15,11 @@ export default function MapSearch({
   placeholder,
   onSelect,
   onDeselect,
+  hideSelectedPin,
 }: {
   className?: string;
   placeholder?: string;
+  hideSelectedPin?: boolean;
   onSelect: (newValue: LocationFeature) => void;
   onDeselect: () => void;
 }) {
@@ -30,10 +32,21 @@ export default function MapSearch({
   const [isSearching, setIsSearching] = useState(false);
   const [selectedLocation, setSelectedLocation] =
     useState<LocationFeature | null>(null);
+  const [selectedPinID, setSelectedPinID] = useState<string>();
   const [selectedLocations, setSelectedLocations] = useState<LocationFeature[]>(
     []
   );
   const debouncedQuery = useDebounce(query, 400);
+
+  useEffect(() => {
+    if (!map || !selectedPinID) return;
+
+    if (hideSelectedPin) {
+      map.setLayoutProperty(selectedPinID, "visibility", "none");
+    } else {
+      map.setLayoutProperty(selectedPinID, "visibility", "visible");
+    }
+  }, [hideSelectedPin, map, selectedPinID]);
 
   useEffect(() => {
     if (!debouncedQuery.trim()) {
@@ -82,7 +95,6 @@ export default function MapSearch({
 
   // Handle input change
   const handleInputChange = (value: string) => {
-    console.log("Input changed:", value);
     setQuery(value);
     setDisplayValue(value);
   };
@@ -109,6 +121,28 @@ export default function MapSearch({
           duration: 1000,
           essential: true,
         });
+
+        if (selectedPinID) map.removeLayer(selectedPinID);
+
+        const pinID = `selected-location-${suggestion.mapbox_id}`;
+        map.addLayer({
+          id: pinID,
+          type: "circle",
+          source: {
+            type: "geojson",
+            data: {
+              type: "FeatureCollection",
+              features: featuresData,
+            },
+          },
+          paint: {
+            "circle-radius": 8,
+            "circle-color": "#007AFF",
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
+        });
+        setSelectedPinID(pinID);
 
         setDisplayValue(suggestion.name);
 

@@ -98,12 +98,14 @@ export async function POST(
       "routes.legs.steps.staticDuration",
       "routes.legs.steps.polyline.encodedPolyline",
       "routes.legs.steps.navigationInstruction",
+      "routes.legs.steps.travelMode",
+      // Transit-specific fields (populated when travelMode is TRANSIT)
+      "routes.legs.steps.transitDetails",
       "routes.legs.localizedValues",
       "routes.localizedValues",
       "routes.viewport",
     ].join(",");
 
-    console.log("api side, request: ", requestBody);
     const response = await fetch(GOOGLE_ROUTES_API_URL, {
       method: "POST",
       headers: {
