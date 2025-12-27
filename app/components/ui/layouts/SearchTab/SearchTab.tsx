@@ -219,6 +219,8 @@ const SearchTab = ({
     );
   }
 
+  //
+
   return (
     <div
       style={{ width: UI_CONFIG.SIDEBAR_WIDTH }}
