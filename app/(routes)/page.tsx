@@ -52,9 +52,23 @@ const Page = () => {
       )
     : new Array(pubs.length).fill(true);
 
-  const filteredPubs = pubs.filter(
-    (_, index) => filteredPubsThresholdBool[index]
-  );
+  const filteredPubs = pubs
+    .filter((_, index) => filteredPubsThresholdBool[index])
+    .sort((a, b) => {
+      const distA = midPoint
+        ? Math.hypot(
+            a.geometry.coordinates[0] - midPoint[0],
+            a.geometry.coordinates[1] - midPoint[1]
+          )
+        : 0;
+      const distB = midPoint
+        ? Math.hypot(
+            b.geometry.coordinates[0] - midPoint[0],
+            b.geometry.coordinates[1] - midPoint[1]
+          )
+        : 0;
+      return distA - distB;
+    });
 
   const handleRouteRequestChange = useCallback((req: IRouteRequestParams) => {
     setRouteRequestParams(req);

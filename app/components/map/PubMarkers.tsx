@@ -5,11 +5,64 @@
 
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import { useMap } from "../../providers/MapProvider";
 import type { PubFeatureCollection, PubFeature } from "@/types/pub";
 import { CLUSTER_CONFIG, MARKER_CONFIG } from "@/lib/constants";
+import Popup from "./map-popups";
+
+interface ActivePub {
+  coordinates: [number, number];
+  properties: {
+    name?: string;
+    address1?: string;
+    postcode?: string;
+    website?: string;
+  };
+}
+
+function PubPopupContent({
+  properties,
+}: {
+  properties: ActivePub["properties"];
+}) {
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${properties.name || ""}, ${properties.address1 || ""}, ${properties.postcode || ""}`
+  )}`;
+
+  return (
+    <div className="min-w-[200px] max-w-[300px] desktop:max-w-[400px]">
+      <h3 className="font-bold text-base mb-2">
+        {properties.name || "Unknown"}
+      </h3>
+      {properties.address1 && (
+        <p className="text-sm mb-1">{properties.address1}</p>
+      )}
+      {properties.postcode && (
+        <p className="text-sm mb-3">{properties.postcode}</p>
+      )}
+      <a
+        href={googleMapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800 underline text-sm block"
+      >
+        Google Maps
+      </a>
+      {properties.website && (
+        <a
+          href={properties.website}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline text-sm block mt-1"
+        >
+          Website
+        </a>
+      )}
+    </div>
+  );
+}
 
 export interface PubMarkersProps {
   /** Pub data in GeoJSON format */
@@ -30,6 +83,7 @@ export default function PubMarkers({
 }: PubMarkersProps) {
   const { map, isLoaded } = useMap();
   const layersAddedRef = useRef(false);
+  const [activePub, setActivePub] = useState<ActivePub | null>(null);
 
   // Add markers when map is loaded
   useEffect(() => {
@@ -179,44 +233,21 @@ export default function PubMarkers({
         onPubClick(feature as unknown as PubFeature);
       }
 
-      // Create and show popup
+      // Get coordinates and properties for popup
       const coordinates = (
         feature.geometry as GeoJSON.Point
       ).coordinates.slice() as [number, number];
       const properties = feature.properties;
 
-      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${coordinates[1]},${coordinates[0]}`;
-
-      const popupContent = `
-        <div class="pub-popup" style="color: black;">
-          <h3 style="font-weight: bold; font-size: 16px; margin-bottom: 8px; color: black;">${
-            properties?.name || "Unknown"
-          }</h3>
-          <p style="margin-bottom: 4px; color: black;">${
-            properties?.address1 || ""
-          }</p>
-          ${
-            properties?.postcode
-              ? `<p style="margin-bottom: 8px; color: black;">${properties.postcode}</p>`
-              : ""
-          }
-          <a href="${googleMapsUrl}" target="_blank" rel="noopener" style="color: #1a73e8; text-decoration: underline; display: block; margin-top: 8px;">View on Google Maps</a>
-          ${
-            properties?.website
-              ? `<a href="${properties.website}" target="_blank" rel="noopener" style="color: #1a73e8; text-decoration: underline; display: block; margin-top: 4px;">🌐 Visit Website</a>`
-              : ""
-          }
-        </div>
-      `;
-
-      new mapboxgl.Popup({
-        offset: 15,
-        closeButton: true,
-        closeOnClick: true,
-      })
-        .setLngLat(coordinates)
-        .setHTML(popupContent)
-        .addTo(map);
+      setActivePub({
+        coordinates,
+        properties: {
+          name: properties?.name,
+          address1: properties?.address1,
+          postcode: properties?.postcode,
+          website: properties?.website,
+        },
+      });
     };
 
     map.on("click", unclusteredLayerId, handlePubClick);
@@ -229,6 +260,16 @@ export default function PubMarkers({
     };
   }, [map, isLoaded, data, enableClustering, sourceId, onPubClick]);
 
-  // This component doesn't render anything visible
-  return null;
+  return activePub ? (
+    <Popup
+      longitude={activePub.coordinates[0]}
+      latitude={activePub.coordinates[1]}
+      offset={15}
+      closeButton={true}
+      closeOnClick={true}
+      onClose={() => setActivePub(null)}
+    >
+      <PubPopupContent properties={activePub.properties} />
+    </Popup>
+  ) : null;
 }

@@ -84,3 +84,40 @@ body {
   color: var(--foreground);
   font-family: var(--font-space-mono), monospace;
 }
+
+/* Mapbox Popup Overrides */
+.mapboxgl-popup-content {
+  font-family: var(--font-space-mono), monospace;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border-radius: var(--radius);
+  padding: 16px;
+  padding-right: 32px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  padding: 0;
+  right: 4px;
+  top: 4px;
+  color: var(--muted-foreground);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: var(--popover);
+}
