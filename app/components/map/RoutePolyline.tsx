@@ -113,12 +113,40 @@ export interface RoutePolylineProps {
 
 /**
  * Detect transport mode from step data
- * Google Routes API may include mode info in navigationInstruction
+ * Google Routes API may include mode info in transitDetails or navigationInstruction
  */
 function detectTransportMode(step: GoogleRouteLegStep): string {
   // First check explicit travelMode
   if (step.travelMode) {
     return step.travelMode;
+  }
+
+  // Check transit details for vehicle type (most accurate for transit)
+  const vehicleType = step.transitDetails?.transitLine?.vehicle?.type;
+  if (vehicleType) {
+    // Map Google vehicle types to our transport modes
+    switch (vehicleType) {
+      case "BUS":
+      case "INTERCITY_BUS":
+      case "TROLLEYBUS":
+        return "BUS";
+      case "SUBWAY":
+      case "METRO_RAIL":
+        return "SUBWAY";
+      case "RAIL":
+      case "HEAVY_RAIL":
+      case "COMMUTER_TRAIN":
+      case "HIGH_SPEED_TRAIN":
+      case "LONG_DISTANCE_TRAIN":
+      case "MONORAIL":
+        return "TRAIN";
+      case "TRAM":
+        return "TRAM";
+      case "FERRY":
+        return "FERRY";
+      default:
+        return "TRANSIT";
+    }
   }
 
   // Check navigation instruction for hints
@@ -175,6 +203,14 @@ function getStyleForMode(
   return baseStyle;
 }
 
+/**
+ * Get transit line color from step's transit details
+ * Returns the color if available, otherwise null to use default style
+ */
+function getTransitColor(step: GoogleRouteLegStep): string | null {
+  return step.transitDetails?.transitLine?.color || null;
+}
+
 export default function RoutePolyline({
   steps,
   id = "route",
@@ -207,7 +243,14 @@ export default function RoutePolyline({
       if (coordinates.length === 0) return;
 
       const travelMode = detectTransportMode(step);
-      const style = getStyleForMode(travelMode, styleOverrides);
+      const baseStyle = getStyleForMode(travelMode, styleOverrides);
+
+      // Apply transit line color from API if available (skip for walking segments)
+      const transitColor = getTransitColor(step);
+      const style: TransportModeStyle =
+        transitColor && travelMode !== "WALK"
+          ? { ...baseStyle, color: transitColor }
+          : baseStyle;
 
       segments.push({
         coordinates,
