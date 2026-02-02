@@ -147,6 +147,14 @@ export default function MapContainer({
         setIsLoading(false);
         setError(null);
 
+        // Force resize after a short delay to ensure CSS layout has settled
+        // This fixes the issue where flexbox heights aren't calculated on initial mobile load
+        requestAnimationFrame(() => {
+          map.resize();
+          // Additional resize as safety net for slower layout calculations
+          setTimeout(() => map.resize(), 100);
+        });
+
         // Register map with provider context
         mapContext.setMap(map);
         mapContext.setIsLoaded(true);
@@ -233,8 +241,10 @@ export default function MapContainer({
         </div>
       )}
 
+      <div className="grow w-full h-full">
+        <div ref={mapContainerRef} className="relative w-full h-full" />
+      </div>
       {/* Map Container */}
-      <div ref={mapContainerRef} className="flex-1 w-full" />
 
       {/* Child components that need access to map */}
       {children}
