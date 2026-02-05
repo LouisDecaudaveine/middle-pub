@@ -114,6 +114,81 @@ export interface GoogleRouteLegStepLocalizedValues {
   staticDuration?: GoogleLocalizedText;
 }
 
+// Transit-specific types for public transport routes
+export type GoogleTransitVehicleType =
+  | "VEHICLE_TYPE_UNSPECIFIED"
+  | "BUS"
+  | "CABLE_CAR"
+  | "COMMUTER_TRAIN"
+  | "FERRY"
+  | "FUNICULAR"
+  | "GONDOLA_LIFT"
+  | "HEAVY_RAIL"
+  | "HIGH_SPEED_TRAIN"
+  | "INTERCITY_BUS"
+  | "LONG_DISTANCE_TRAIN"
+  | "METRO_RAIL"
+  | "MONORAIL"
+  | "OTHER"
+  | "RAIL"
+  | "SHARE_TAXI"
+  | "SUBWAY"
+  | "TRAM"
+  | "TROLLEYBUS";
+
+export interface GoogleTransitVehicle {
+  name?: GoogleLocalizedText;
+  type?: GoogleTransitVehicleType;
+  iconUri?: string;
+  localIconUri?: string;
+}
+
+export interface GoogleTransitAgency {
+  name?: string;
+  uri?: string;
+}
+
+export interface GoogleTransitLine {
+  agencies?: GoogleTransitAgency[];
+  name?: string;
+  uri?: string;
+  color?: string;
+  nameShort?: string;
+  textColor?: string;
+  vehicle?: GoogleTransitVehicle;
+}
+
+export interface GoogleTransitStop {
+  name?: string;
+  location?: GoogleLocation;
+}
+
+export interface GoogleTransitStopDetails {
+  arrivalStop?: GoogleTransitStop;
+  arrivalTime?: string;
+  departureStop?: GoogleTransitStop;
+  departureTime?: string;
+}
+
+export interface GoogleTransitLocalizedTime {
+  time?: GoogleLocalizedText;
+  timeZone?: string;
+}
+
+export interface GoogleTransitLocalizedValues {
+  arrivalTime?: GoogleTransitLocalizedTime;
+  departureTime?: GoogleTransitLocalizedTime;
+}
+
+export interface GoogleTransitDetails {
+  stopDetails?: GoogleTransitStopDetails;
+  localizedValues?: GoogleTransitLocalizedValues;
+  headsign?: string;
+  headway?: string;
+  transitLine?: GoogleTransitLine;
+  stopCount?: number;
+}
+
 export interface GoogleRouteLegStep {
   distanceMeters?: number;
   staticDuration?: string;
@@ -123,6 +198,7 @@ export interface GoogleRouteLegStep {
   navigationInstruction?: GoogleNavigationInstruction;
   localizedValues?: GoogleRouteLegStepLocalizedValues;
   travelMode?: GoogleRouteTravelMode;
+  transitDetails?: GoogleTransitDetails;
 }
 
 export interface GoogleRouteLegLocalizedValues {

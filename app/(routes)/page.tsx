@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 
+import { showToast } from "@/lib/toast";
 import MapContainer from "@/components/map/MapContainer";
 import MapProvider from "@/providers/MapProvider";
 import PubMarkers from "@/components/map/PubMarkers";
@@ -19,14 +20,18 @@ import {
 } from "@/lib/utils/coordinates";
 
 const Page = () => {
-  const { pubs, isLoading, isError, error, filteredCount, totalCount } =
-    usePubData();
+  const {
+    pubs,
+    isLoading,
+    isError: isPubError,
+    filteredCount,
+    totalCount,
+  } = usePubData();
 
   const {
     data: routeData,
     isLoading: isRouteLoading,
     isError: isRouteError,
-    error: routeError,
     getRoute,
   } = useRoutes({ travelMode: "TRANSIT" });
 
@@ -47,9 +52,23 @@ const Page = () => {
       )
     : new Array(pubs.length).fill(true);
 
-  const filteredPubs = pubs.filter(
-    (_, index) => filteredPubsThresholdBool[index]
-  );
+  const filteredPubs = pubs
+    .filter((_, index) => filteredPubsThresholdBool[index])
+    .sort((a, b) => {
+      const distA = midPoint
+        ? Math.hypot(
+            a.geometry.coordinates[0] - midPoint[0],
+            a.geometry.coordinates[1] - midPoint[1]
+          )
+        : 0;
+      const distB = midPoint
+        ? Math.hypot(
+            b.geometry.coordinates[0] - midPoint[0],
+            b.geometry.coordinates[1] - midPoint[1]
+          )
+        : 0;
+      return distA - distB;
+    });
 
   const handleRouteRequestChange = useCallback((req: IRouteRequestParams) => {
     setRouteRequestParams(req);
@@ -63,6 +82,12 @@ const Page = () => {
       getRoute(startLat, startLng, endLat, endLng);
     }
   }, [getRoute, routeRequestParams]);
+
+  useEffect(() => {
+    if (isPubError) showToast(`Error loading pub data`, "error");
+
+    if (isRouteError) showToast(`Error fetching route data`, "error");
+  }, [isPubError, isRouteError]);
 
   const pubCollection = {
     type: "FeatureCollection" as const,
@@ -80,7 +105,7 @@ const Page = () => {
       </div> */}
       <MapProvider>
         <div className="bg-gray-400 flex-1 flex flex-col desktop:flex-row">
-          <div className="flex-1 h-full">
+          <div className="flex-1 desktop:h-full h-screen">
             <MapContainer showControls={true} showFullscreen={true}>
               <PubMarkers data={pubCollection} enableClustering={false} />
               {routeSteps && routeSteps.length > 0 && (

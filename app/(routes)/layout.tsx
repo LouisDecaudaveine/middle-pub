@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Mono } from "next/font/google";
 import "../globals.css";
 import QueryProvider from "../providers/QueryProvider";
+import { Toaster } from "@/components/ui/molecules/Toaster";
 
 const spaceMono = Space_Mono({
   variable: "--font-space-mono",
@@ -23,7 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${spaceMono.variable} antialiased`}>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          {children}
+          <Toaster />
+        </QueryProvider>
       </body>
     </html>
   );
